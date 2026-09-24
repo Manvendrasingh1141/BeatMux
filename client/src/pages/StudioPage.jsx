@@ -20,6 +20,20 @@ export default function StudioPage() {
   const [messages,   setMessages]   = useState(initialData?.roomState?.messages || []);
 
   useEffect(() => {
+    window.onAddMusic = async (file) => {
+      try {
+        let name = file.name;
+        if (name.lastIndexOf('.') !== -1) name = name.substring(0, name.lastIndexOf('.'));
+        name = name.substring(0, 6);
+        setCurrentMusicName(name);
+        if (window.audioEngineInstance) {
+          await window.audioEngineInstance.loadMusic(file);
+        }
+      } catch (err) { console.error(err); }
+    };
+  }, []);
+
+  useEffect(() => {
     if (!socket) return;
 
     const onConnect    = () => {
@@ -71,6 +85,16 @@ export default function StudioPage() {
     addTrack, renameTrack, undo, redo, canUndo, canRedo,
   } = useSequencer(initialData?.roomState?.state || null);
 
+  const handleDownload = () => {
+    if (isRecording) {
+      setIsRecording(false);
+      window.audioEngineInstance?.stopRecording();
+    } else {
+      setIsRecording(true);
+      window.audioEngineInstance?.startRecording();
+    }
+  };
+
   const handleSendMessage = (text) => {
     if (!text.trim() || !socket) return;
     socket.emit('chat:send', { text });
@@ -91,7 +115,7 @@ export default function StudioPage() {
         backgroundSize: '40px 40px',
       }}
     >
-      <TopNav
+      <TopNav onDownload={handleDownload} isRecording={isRecording}
         roomId={roomId}
         isPlaying={isPlaying}
         bpm={bpm}
@@ -138,7 +162,7 @@ export default function StudioPage() {
         <CollaboratorsPanel users={users} you={you} messages={messages} onSendMessage={handleSendMessage} />
       </div>
 
-      <BottomBar
+      <BottomBar currentMusicName={currentMusicName}
         isPlaying={isPlaying}
         onTogglePlay={togglePlay}
         onStop={stop}

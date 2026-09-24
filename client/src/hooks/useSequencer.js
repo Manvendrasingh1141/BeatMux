@@ -88,6 +88,7 @@ export function useSequencer(initialState = null) {
 
   if (!engineRef.current) {
     engineRef.current = new AudioEngine();
+    window.audioEngineInstance = engineRef.current;
   }
 
   useEffect(() => {

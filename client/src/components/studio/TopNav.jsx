@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { Activity, Play, Pause, Square, Undo2, Redo2, Minus, Plus, Copy, Check } from 'lucide-react';
+import { Activity, Play, Pause, Square, Undo2, Redo2, Minus, Plus, Copy, Check, Download } from 'lucide-react';
 
-export default function TopNav({ roomId, isPlaying, bpm, onTogglePlay, onStop, onChangeBpm, userCount, connStatus, you, onUndo, onRedo, canUndo, canRedo }) {
+export default function TopNav({ roomId, isPlaying, bpm, onTogglePlay, onStop, onChangeBpm, userCount, connStatus, you, onUndo, onRedo, canUndo, canRedo, onDownload, isRecording }) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = () => {
@@ -85,6 +85,16 @@ export default function TopNav({ roomId, isPlaying, bpm, onTogglePlay, onStop, o
       <div className="flex items-center gap-4">
         {/* Pills */}
         <div className="flex items-center gap-2">
+          {/* Download */}
+          <button
+            onClick={onDownload}
+            title={isRecording ? "Stop recording and download" : "Record mix"}
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold transition-colors border ${isRecording ? 'bg-red-50 text-red-600 border-red-200 animate-pulse' : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'}`}
+          >
+            <Download className="w-3.5 h-3.5" />
+            {isRecording ? 'Stop & Save' : 'Download'}
+          </button>
+
           {/* Collaborators */}
           <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold text-indigo-600 bg-indigo-50 border border-indigo-100">
             <span className="flex -space-x-1">

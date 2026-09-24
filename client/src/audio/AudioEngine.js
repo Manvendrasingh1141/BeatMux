@@ -50,6 +50,11 @@ export class AudioEngine {
     this._muted         = {};
     this._soloed        = {};
     this._volumes       = { kick: 80, snare: 80, closedHat: 80, openHat: 80 };
+    this._musicBuffer = null;
+    this._musicSource = null;
+    this._recorder = null;
+    this._destNode = null;
+    this._recordedChunks = [];
 
     // Lookahead scheduler handle
     this._schedulerTimer = null;
@@ -94,6 +99,42 @@ export class AudioEngine {
   _ensureCtx() {
     if (!this._ctx) this.init();
     if (this._ctx.state === 'suspended') this._ctx.resume();
+  }
+
+  async loadMusic(file) {
+    this._ensureCtx();
+    const arrayBuffer = await file.arrayBuffer();
+    this._musicBuffer = await this._ctx.decodeAudioData(arrayBuffer);
+  }
+
+  startRecording() {
+    this._ensureCtx();
+    this._destNode = this._ctx.createMediaStreamDestination();
+    this._masterGain.connect(this._destNode);
+    this._recorder = new MediaRecorder(this._destNode.stream);
+    this._recordedChunks = [];
+    this._recorder.ondataavailable = e => {
+      if (e.data.size > 0) this._recordedChunks.push(e.data);
+    };
+    this._recorder.onstop = () => {
+      const blob = new Blob(this._recordedChunks, { type: 'audio/webm' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'beatmux-mix.webm';
+      a.click();
+    };
+    this._recorder.start();
+  }
+
+  stopRecording() {
+    if (this._recorder && this._recorder.state !== 'inactive') {
+      this._recorder.stop();
+    }
+    if (this._destNode) {
+      this._masterGain.disconnect(this._destNode);
+      this._destNode = null;
+    }
   }
 
   // ── Public setters (called by the hook when React state changes) ─────────
@@ -167,13 +208,34 @@ export class AudioEngine {
         this._nextStepTime = this._ctx.currentTime + (stepSec - remainderSec);
       } else {
         // The start time is slightly in the future
-        this._currentStep = 0;
+            this._currentStep = 0;
+
+    if (this._musicSource) {
+      this._musicSource.stop();
+      this._musicSource.disconnect();
+      this._musicSource = null;
+    }
         this._nextStepTime = this._ctx.currentTime + Math.abs(elapsedSec) + 0.05;
       }
     } else {
       // Local immediate start (fallback)
       this._currentStep  = 0;
       this._nextStepTime = this._ctx.currentTime + 0.05;
+    }
+
+        if (this._musicBuffer) {
+      this._musicSource = this._ctx.createBufferSource();
+      this._musicSource.buffer = this._musicBuffer;
+      this._musicSource.connect(this._masterGain);
+      
+      let offset = 0;
+      if (startTime) {
+        const elapsedSec = (Date.now() - startTime) / 1000;
+        if (elapsedSec > 0) {
+          offset = elapsedSec % this._musicBuffer.duration;
+        }
+      }
+      this._musicSource.start(this._nextStepTime, offset);
     }
 
     this._startScheduler();

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Pencil, SkipBack, Play, Pause, SkipForward, Volume2, VolumeX } from 'lucide-react';
 
-export default function BottomBar({ isPlaying, onTogglePlay, onStop, onChangeMasterVolume }) {
+export default function BottomBar({ isPlaying, onTogglePlay, onStop, onChangeMasterVolume, currentMusicName }) {
   const [volume, setVolume] = useState(80);
   const [muted,  setMuted]  = useState(false);
   const [elapsedMs, setElapsedMs] = useState(0);
@@ -46,8 +46,15 @@ export default function BottomBar({ isPlaying, onTogglePlay, onStop, onChangeMas
   return (
     <footer className="h-[64px] bg-white border-t border-slate-200/80 flex items-center justify-between px-5 shrink-0 z-20 shadow-[0_-2px_10px_rgba(0,0,0,0.04)]">
 
-      {/* ── Left: Project info removed ─────────────────────────────────── */}
-      <div className="w-52 shrink-0" />
+      {/* ── Left: Current Track ─────────────────────────────────── */}
+      <div className="w-52 shrink-0 flex flex-col justify-center">
+        {currentMusicName && (
+          <>
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Current song</span>
+            <span className="text-sm font-semibold text-slate-800 truncate">{currentMusicName}</span>
+          </>
+        )}
+      </div>
 
       {/* ── Centre: Timecode + Transport ───────────────────────── */}
       <div className="flex items-center gap-6">
