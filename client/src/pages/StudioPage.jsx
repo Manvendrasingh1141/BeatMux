@@ -23,6 +23,16 @@ export default function StudioPage() {
   const [musicDuration, setMusicDuration] = useState(0);
   const [elapsedMs, setElapsedMs] = useState(0);
 
+  const {
+    pattern, isPlaying, bpm, currentStep, muted, soloed, volumes,
+    tracks, quantize, patternBank, resolution,
+    togglePlay, stop, toggleStep, clearPattern, resetPattern,
+    changeBpm, toggleMute, toggleSolo, changeVolume, changeMasterVolume,
+    changeQuantize, changePatternBank, changeResolution,
+    addTrack, renameTrack, undo, redo, canUndo, canRedo,
+  } = useSequencer(initialData?.roomState?.state || null);
+
+
   useEffect(() => {
     let animationFrameId;
     let startTimestamp = null;
@@ -103,14 +113,7 @@ export default function StudioPage() {
     };
   }, [socket, roomId, you.displayName]);
 
-  const {
-    pattern, isPlaying, bpm, currentStep, muted, soloed, volumes,
-    tracks, quantize, patternBank, resolution,
-    togglePlay, stop, toggleStep, clearPattern, resetPattern,
-    changeBpm, toggleMute, toggleSolo, changeVolume, changeMasterVolume,
-    changeQuantize, changePatternBank, changeResolution,
-    addTrack, renameTrack, undo, redo, canUndo, canRedo,
-  } = useSequencer(initialData?.roomState?.state || null);
+  
 
   const handleDownload = () => {
     if (isRecording) {
