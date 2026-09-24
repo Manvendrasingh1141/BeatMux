@@ -28,7 +28,7 @@ export default function StudioPage() {
     let startTimestamp = null;
     let initialElapsed = elapsedMs;
 
-    if (seq.isPlaying) {
+    if (isPlaying) {
       const tick = (timestamp) => {
         if (startTimestamp === null) startTimestamp = timestamp;
         const delta = timestamp - startTimestamp;
@@ -43,7 +43,7 @@ export default function StudioPage() {
     return () => {
       if (animationFrameId) cancelAnimationFrame(animationFrameId);
     };
-  }, [seq.isPlaying, musicDuration]);
+  }, [isPlaying, musicDuration]);
 
   useEffect(() => {
     window.onAddMusic = async (file) => {
@@ -160,7 +160,7 @@ export default function StudioPage() {
 
       <div className="flex-1 flex overflow-hidden h-full">
         <main className="flex-1 h-full flex flex-col justify-center px-8 py-6 gap-6 overflow-hidden min-w-0 bg-transparent relative">
-            <Arranger currentStep={currentStep} isPlaying={isPlaying} tracks={tracks} quantize={quantize} pattern={pattern} />
+            <Arranger currentStep={currentStep} isPlaying={isPlaying} tracks={tracks} quantize={quantize} pattern={pattern} elapsedMs={elapsedMs} musicDuration={musicDuration} bpm={bpm} />
 
             <Sequencer
               pattern={pattern}
