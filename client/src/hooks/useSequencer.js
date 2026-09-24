@@ -84,6 +84,8 @@ export function useSequencer(initialState = null) {
   const [resolution,  setResolution]  = useState(initialState?.resolution || '1/4 Beat');
 
   const engineRef = useRef(null);
+  const startTimeRef = useRef(null);
+  const pausedElapsedMsRef = useRef(0);
   const socket = getSocket();
 
   if (!engineRef.current) {
@@ -237,25 +239,33 @@ export function useSequencer(initialState = null) {
   // ── Actions (Emit to Socket) ──────────────────────────────────────────────
 
   const play = useCallback(() => {
-    const ts = Date.now();
+    const elapsed = pausedElapsedMsRef.current;
+    const ts = Date.now() - elapsed;
+    startTimeRef.current = ts;
     engineRef.current.init();
     engineRef.current.play(ts);
     setIsPlaying(true);
-    setCurrentStep(0);
     if (socket) socket.emit('sequencer:play', { isPlaying: true, timestamp: ts });
     reportActivity('Playing');
   }, [socket, reportActivity]);
 
-  const stop = useCallback(() => {
+  const stop = useCallback((reset = false) => {
+    if (startTimeRef.current && !reset) {
+      pausedElapsedMsRef.current = Date.now() - startTimeRef.current;
+    }
+    if (reset) {
+      pausedElapsedMsRef.current = 0;
+      startTimeRef.current = null;
+      setCurrentStep(0);
+    }
     engineRef.current.stop();
     setIsPlaying(false);
-    setCurrentStep(-1);
     if (socket) socket.emit('sequencer:play', { isPlaying: false });
     reportActivity('Idle');
   }, [socket, reportActivity]);
 
   const togglePlay = useCallback(() => {
-    if (engineRef.current.isPlaying) stop();
+    if (engineRef.current.isPlaying) stop(false);
     else play();
   }, [play, stop]);
 
@@ -268,6 +278,8 @@ export function useSequencer(initialState = null) {
       const newValue = !prev[trackKey][stepIndex];
       if (socket) socket.emit('sequencer:step', { trackKey, stepIndex, value: newValue });
       return {
+    stop: () => stop(true),
+    pause: () => stop(false),
         ...prev,
         [trackKey]: prev[trackKey].map((v, i) => (i === stepIndex ? newValue : v)),
       };

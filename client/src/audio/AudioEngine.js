@@ -1,19 +1,5 @@
 /**
  * AudioEngine.js
- *
- * A precise, lookahead-scheduled drum sequencer engine.
- *
- * Timing strategy (Web Audio best practice — "A tale of two clocks"):
- * ─────────────────────────────────────────────────────────────────────
- *  • Audio scheduling uses AudioContext.currentTime (high-resolution,
- *    drift-free, runs on the audio thread).
- *  • A lightweight setTimeout loop (~25 ms) is the "scheduler tick" —
- *    it looks 100 ms ahead and pre-schedules any upcoming notes.
- *  • Visual updates use requestAnimationFrame, reading from a note queue
- *    to keep the highlighted step in sync without ever blocking audio.
- *
- * This completely separates audio timing from React rendering, giving
- * glitch-free playback even when the UI is busy.
  */
 
 import { playKick }      from './sounds/kick.js';
@@ -21,11 +7,9 @@ import { playSnare }     from './sounds/snare.js';
 import { playClosedHat } from './sounds/closedHat.js';
 import { playOpenHat }   from './sounds/openHat.js';
 
-// ─── Constants ────────────────────────────────────────────────────────────────
-
-const TOTAL_STEPS    = 16;
-const LOOKAHEAD_MS   = 25.0;   // how often the scheduler fires (ms)
-const SCHEDULE_AHEAD = 0.12;   // how far ahead to schedule audio (seconds)
+const LOOKAHEAD_MS = 25;
+const SCHEDULE_AHEAD = 0.1;
+const TOTAL_STEPS = 16;
 
 const SOUND_FNS = {
   kick:      playKick,
@@ -34,44 +18,33 @@ const SOUND_FNS = {
   openHat:   playOpenHat,
 };
 
-// ─── AudioEngine class ────────────────────────────────────────────────────────
-
 export class AudioEngine {
   constructor() {
-    this._ctx           = null;   // AudioContext — created lazily
-    this._masterGain    = null;   // master gain node
-    this._trackGains    = {};     // per-track gain nodes
+    this._ctx           = null;
+    this._masterGain    = null;
+    this._trackGains    = {};
     this._isPlaying     = false;
-    this._currentStep   = 0;     // next step to be scheduled
-    this._nextStepTime  = 0;     // AudioContext time of the next step
+    this._currentStep   = 0;
+    this._nextStepTime  = 0;
     this._bpm           = 120;
     this._resolution    = "1/4 Beat";
     this._pattern       = this._emptyPattern();
     this._muted         = {};
     this._soloed        = {};
     this._volumes       = { kick: 80, snare: 80, closedHat: 80, openHat: 80 };
-    this._musicBuffer = null;
-    this._musicSource = null;
-    this._recorder = null;
-    this._destNode = null;
+    
+    this._musicBuffer   = null;
+    this._musicSource   = null;
+    this._recorder      = null;
+    this._destNode      = null;
     this._recordedChunks = [];
 
-    // Lookahead scheduler handle
     this._schedulerTimer = null;
-
-    // Queue of { step, time } objects used to drive the visual indicator
     this._stepQueue = [];
-
-    // RAF handle for visual loop
     this._rafHandle = null;
-
-    // Callback registered by the hook: (visualStep) => void
     this._onStepChange = null;
   }
 
-  // ── Context management ───────────────────────────────────────────────────
-
-  /** Must be called from a user-gesture handler to unlock the AudioContext. */
   init() {
     if (this._ctx) {
       if (this._ctx.state === 'suspended') this._ctx.resume();
@@ -79,16 +52,12 @@ export class AudioEngine {
     }
 
     this._ctx = new (window.AudioContext || window.webkitAudioContext)();
-
-    // Master gain — gives us a global volume knob in the future
     this._masterGain = this._ctx.createGain();
     this._masterGain.gain.value = 0.9;
     this._masterGain.connect(this._ctx.destination);
 
-    // Create per-track gains
     Object.keys(SOUND_FNS).forEach(key => {
       const gainNode = this._ctx.createGain();
-      // map 0-100 to 0-1 using a gentle curve
       const vol = this._volumes[key] / 100;
       gainNode.gain.value = vol * vol;
       gainNode.connect(this._masterGain);
@@ -137,31 +106,12 @@ export class AudioEngine {
     }
   }
 
-  // ── Public setters (called by the hook when React state changes) ─────────
-
-  setBpm(bpm) {
-    this._bpm = Math.max(40, Math.min(240, bpm));
-  }
-
-  setResolution(res) {
-    this._resolution = res;
-  }
-
-  setPattern(pattern) {
-    // Deep-clone so audio thread never sees a partial state update
-    this._pattern = Object.fromEntries(
-      Object.entries(pattern).map(([k, v]) => [k, [...v]])
-    );
-  }
-
-  setMuted(muted) {
-    this._muted = { ...muted };
-  }
-
-  setSoloed(soloed) {
-    this._soloed = { ...soloed };
-  }
-
+  setBpm(bpm) { this._bpm = Math.max(40, Math.min(240, bpm)); }
+  setResolution(res) { this._resolution = res; }
+  setPattern(pattern) { this._pattern = Object.fromEntries(Object.entries(pattern).map(([k, v]) => [k, [...v]])); }
+  setMuted(muted) { this._muted = { ...muted }; }
+  setSoloed(soloed) { this._soloed = { ...soloed }; }
+  
   setVolumes(volumes) {
     this._volumes = { ...volumes };
     if (this._ctx && this._trackGains) {
@@ -178,64 +128,46 @@ export class AudioEngine {
     if (this._masterGain) this._masterGain.gain.value = linear;
   }
 
-  /** Register the callback that updates the visual step indicator in React. */
   onStepChange(fn) {
     this._onStepChange = fn;
   }
-
-  // ── Play / Stop ──────────────────────────────────────────────────────────
 
   play(startTime = null) {
     if (this._isPlaying) return;
     this._ensureCtx();
 
-    this._isPlaying    = true;
+    this._isPlaying = true;
     this._stepQueue = [];
 
+    let offset = 0;
+
     if (startTime) {
-      // Phase-sync calculation based on a shared timestamp
       const elapsedSec = (Date.now() - startTime) / 1000;
       const stepsPerBeat = this._resolution === '1/8 Beat' ? 8 : 4;
-      const stepSec = (60 / this._bpm) / stepsPerBeat; // duration of one step
+      const stepSec = (60 / this._bpm) / stepsPerBeat;
 
       if (elapsedSec > 0) {
-        // We are joining playback that already started
+        offset = elapsedSec;
         const exactSteps = elapsedSec / stepSec;
         this._currentStep = Math.floor(exactSteps) % 16;
         const remainderSec = (exactSteps - Math.floor(exactSteps)) * stepSec;
-        
-        // Start playing the *next* step right on the grid
         this._nextStepTime = this._ctx.currentTime + (stepSec - remainderSec);
       } else {
-        // The start time is slightly in the future
-            this._currentStep = 0;
-
-    if (this._musicSource) {
-      this._musicSource.stop();
-      this._musicSource.disconnect();
-      this._musicSource = null;
-    }
+        this._currentStep = 0;
         this._nextStepTime = this._ctx.currentTime + Math.abs(elapsedSec) + 0.05;
       }
     } else {
-      // Local immediate start (fallback)
-      this._currentStep  = 0;
+      this._currentStep = 0;
       this._nextStepTime = this._ctx.currentTime + 0.05;
     }
 
-        if (this._musicBuffer) {
+    if (this._musicBuffer) {
       this._musicSource = this._ctx.createBufferSource();
       this._musicSource.buffer = this._musicBuffer;
       this._musicSource.connect(this._masterGain);
-      
-      let offset = 0;
-      if (startTime) {
-        const elapsedSec = (Date.now() - startTime) / 1000;
-        if (elapsedSec > 0) {
-          offset = elapsedSec % this._musicBuffer.duration;
-        }
+      if (offset < this._musicBuffer.duration) {
+        this._musicSource.start(this._nextStepTime, offset);
       }
-      this._musicSource.start(this._nextStepTime, offset);
     }
 
     this._startScheduler();
@@ -254,80 +186,64 @@ export class AudioEngine {
       this._rafHandle = null;
     }
 
-    this._stepQueue   = [];
-    this._currentStep = 0;
+    if (this._musicSource) {
+      this._musicSource.stop();
+      this._musicSource.disconnect();
+      this._musicSource = null;
+    }
 
-    // Signal stopped state to React (-1 = no step highlighted)
+    this._stepQueue = [];
+    
+    // We do NOT reset this._currentStep to 0 here. 
+    // It maintains state so the UI knows where it paused.
+    
     if (this._onStepChange) this._onStepChange(-1);
   }
 
   get isPlaying() { return this._isPlaying; }
 
-  // ── Lookahead scheduler ──────────────────────────────────────────────────
-
   _startScheduler() {
     const tick = () => {
       if (!this._isPlaying) return;
-
-      // Schedule all steps that fall within the look-ahead window
-      while (
-        this._ctx &&
-        this._nextStepTime < this._ctx.currentTime + SCHEDULE_AHEAD
-      ) {
+      while (this._ctx && this._nextStepTime < this._ctx.currentTime + SCHEDULE_AHEAD) {
         this._scheduleStep(this._currentStep, this._nextStepTime);
         this._advance();
       }
-
       this._schedulerTimer = setTimeout(tick, LOOKAHEAD_MS);
     };
-
     tick();
   }
 
   _scheduleStep(step, time) {
-    // Push to queue so the visual loop can pick it up at the right moment
     this._stepQueue.push({ step, time });
-
     const hasSolo = Object.values(this._soloed).some(Boolean);
-
     Object.entries(SOUND_FNS).forEach(([key, fn]) => {
       if (!this._pattern[key]?.[step]) return;
-      if (this._muted[key])              return;
+      if (this._muted[key]) return;
       if (hasSolo && !this._soloed[key]) return;
-
       fn(this._ctx, time, this._trackGains[key]);
     });
   }
 
   _advance() {
-    // Seconds per step at current BPM and resolution
     const stepsPerBeat = this._resolution === '1/8 Beat' ? 8 : 4;
     const secondsPerStep = 60.0 / this._bpm / stepsPerBeat;
     this._nextStepTime += secondsPerStep;
-    this._currentStep   = (this._currentStep + 1) % TOTAL_STEPS;
+    this._currentStep = (this._currentStep + 1) % TOTAL_STEPS;
   }
-
-  // ── Visual step loop (requestAnimationFrame) ─────────────────────────────
 
   _startVisualLoop() {
     const tick = () => {
       if (!this._isPlaying) return;
-
       const now = this._ctx ? this._ctx.currentTime : 0;
-
-      // Drain all queue entries whose scheduled time has been reached
       while (this._stepQueue.length > 0 && this._stepQueue[0].time <= now) {
         const { step } = this._stepQueue.shift();
         if (this._onStepChange) this._onStepChange(step);
       }
-
       this._rafHandle = requestAnimationFrame(tick);
     };
-
     this._rafHandle = requestAnimationFrame(tick);
   }
-
-  // ── Helpers ──────────────────────────────────────────────────────────────
 
   _emptyPattern() {
     return { kick: [], snare: [], closedHat: [], openHat: [] };

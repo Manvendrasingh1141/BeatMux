@@ -23,10 +23,12 @@ const TRACK_WAVES = Array.from({ length: 20 }).map((_, ti) => ({
   seg2: makeWaveform(30, ti * 2.1 + 1),
 }));
 
-const TOTAL_BARS = 16;
 
-export default function Arranger({ currentStep = -1, isPlaying = false, tracks = [], quantize = '1/16', pattern = null }) {
+
+export default function Arranger({ currentStep = -1, isPlaying = false, tracks = [], quantize = '1/16', pattern = null, elapsedMs = 0, musicDuration = 0, bpm = 120 }) {
   const [zoom, setZoom]    = useState(3);
+  const secondsPerBar = (60 / bpm) * 4;
+  const TOTAL_BARS = musicDuration > 0 ? Math.max(16, Math.ceil(musicDuration / secondsPerBar)) : 16;
   const timelineRef        = useRef(null);
   const leftRef            = useRef(null);
 
@@ -41,7 +43,7 @@ export default function Arranger({ currentStep = -1, isPlaying = false, tracks =
   const totalWidth  = colWidth * TOTAL_BARS;
   const TOTAL_STEPS = 16;
   const stepWidth   = colWidth / TOTAL_STEPS;
-  const playheadPx  = isPlaying && currentStep >= 0 ? currentStep * stepWidth : -1;
+  const playheadPx = (isPlaying || elapsedMs > 0) ? (elapsedMs / 1000) * (colWidth * 4 / secondsPerBar) : -1;
 
   useEffect(() => {
     if (!timelineRef.current || playheadPx < 0) return;

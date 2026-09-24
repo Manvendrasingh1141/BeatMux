@@ -1,52 +1,29 @@
-import { useState, useEffect } from 'react';
-import { Pencil, SkipBack, Play, Pause, SkipForward, Volume2, VolumeX } from 'lucide-react';
+import { useState } from 'react';
+import { SkipBack, Play, Pause, SkipForward, Volume2, VolumeX } from 'lucide-react';
 
-export default function BottomBar({ isPlaying, onTogglePlay, onStop, onChangeMasterVolume, currentMusicName }) {
+export default function BottomBar({ isPlaying, onTogglePlay, onStop, onChangeMasterVolume, currentMusicName, elapsedMs, musicDuration, onResetElapsed }) {
   const [volume, setVolume] = useState(80);
   const [muted,  setMuted]  = useState(false);
-  const [elapsedMs, setElapsedMs] = useState(0);
 
   const volDb = ((volume / 100) * 6 - 6).toFixed(1);
 
-  // Dynamic time counter while playing
-  useEffect(() => {
-    let animationFrameId;
-    let startTimestamp = null;
-    let initialElapsed = elapsedMs;
-
-    if (isPlaying) {
-      const tick = (timestamp) => {
-        if (startTimestamp === null) startTimestamp = timestamp;
-        const delta = timestamp - startTimestamp;
-        
-        // Loop at 32 seconds (32000 ms) for visual effect
-        const current = (initialElapsed + delta) % 32000;
-        setElapsedMs(current);
-        animationFrameId = requestAnimationFrame(tick);
-      };
-      animationFrameId = requestAnimationFrame(tick);
-    }
-
-    return () => {
-      if (animationFrameId) cancelAnimationFrame(animationFrameId);
-    };
-  }, [isPlaying]);
-
   const handleStop = () => {
     onStop();
-    setElapsedMs(0);
+    if (onResetElapsed) onResetElapsed();
   };
 
-  // Format MM:SS.ms (e.g. 00:12.34)
-  const mins = Math.floor(elapsedMs / 60000).toString().padStart(2, '0');
-  const secs = Math.floor((elapsedMs % 60000) / 1000).toString().padStart(2, '0');
-  const ms = Math.floor((elapsedMs % 1000) / 10).toString().padStart(2, '0');
-  const timeString = `${mins}:${secs}.${ms}`;
+  const formatTime = (msVal) => {
+    const mins = Math.floor(msVal / 60000).toString().padStart(2, '0');
+    const secs = Math.floor((msVal % 60000) / 1000).toString().padStart(2, '0');
+    const ms = Math.floor((msVal % 1000) / 10).toString().padStart(2, '0');
+    return `${mins}:${secs}.${ms}`;
+  };
+
+  const timeString = formatTime(elapsedMs);
+  const totalString = musicDuration > 0 ? formatTime(musicDuration * 1000) : "00:32.00";
 
   return (
     <footer className="h-[64px] bg-white border-t border-slate-200/80 flex items-center justify-between px-5 shrink-0 z-20 shadow-[0_-2px_10px_rgba(0,0,0,0.04)]">
-
-      {/* ── Left: Current Track ─────────────────────────────────── */}
       <div className="w-52 shrink-0 flex flex-col justify-center">
         {currentMusicName && (
           <>
@@ -56,14 +33,10 @@ export default function BottomBar({ isPlaying, onTogglePlay, onStop, onChangeMas
         )}
       </div>
 
-      {/* ── Centre: Timecode + Transport ───────────────────────── */}
       <div className="flex items-center gap-6">
-        {/* Current Time (Left) */}
         <span className="text-[13px] font-bold tabular-nums text-slate-500 w-[60px] text-right">
           {timeString}
         </span>
-
-        {/* Transport Controls (Center) */}
         <div className="flex items-center gap-4">
           <button onClick={handleStop} className="text-slate-400 hover:text-slate-700 transition-colors" aria-label="Skip to start">
             <SkipBack className="w-4 h-4 fill-current" />
@@ -82,14 +55,11 @@ export default function BottomBar({ isPlaying, onTogglePlay, onStop, onChangeMas
             <SkipForward className="w-4 h-4 fill-current" />
           </button>
         </div>
-
-        {/* Total Time (Right) */}
         <span className="text-[13px] font-bold tabular-nums text-slate-500 w-[60px]">
-          00:32.00
+          {totalString}
         </span>
       </div>
 
-      {/* ── Right: Volume ───────────────────────────── */}
       <div className="flex items-center gap-3 w-52 shrink-0 justify-end">
         <button
           onClick={() => { const m = !muted; setMuted(m); onChangeMasterVolume?.(m ? 0 : volume / 100); }}

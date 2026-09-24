@@ -20,6 +20,30 @@ export default function StudioPage() {
   const [messages,   setMessages]   = useState(initialData?.roomState?.messages || []);
   const [currentMusicName, setCurrentMusicName] = useState("");
   const [isRecording, setIsRecording] = useState(false);
+  const [musicDuration, setMusicDuration] = useState(0);
+  const [elapsedMs, setElapsedMs] = useState(0);
+
+  useEffect(() => {
+    let animationFrameId;
+    let startTimestamp = null;
+    let initialElapsed = elapsedMs;
+
+    if (seq.isPlaying) {
+      const tick = (timestamp) => {
+        if (startTimestamp === null) startTimestamp = timestamp;
+        const delta = timestamp - startTimestamp;
+        // if no music duration, loop at 32s for visual
+        const limit = musicDuration > 0 ? musicDuration * 1000 : 32000;
+        setElapsedMs((initialElapsed + delta) % limit);
+        animationFrameId = requestAnimationFrame(tick);
+      };
+      animationFrameId = requestAnimationFrame(tick);
+    }
+
+    return () => {
+      if (animationFrameId) cancelAnimationFrame(animationFrameId);
+    };
+  }, [seq.isPlaying, musicDuration]);
 
   useEffect(() => {
     window.onAddMusic = async (file) => {
@@ -30,6 +54,7 @@ export default function StudioPage() {
         setCurrentMusicName(name);
         if (window.audioEngineInstance) {
           await window.audioEngineInstance.loadMusic(file);
+          setMusicDuration(window.audioEngineInstance._musicBuffer.duration);
         }
       } catch (err) { console.error(err); }
     };
@@ -164,7 +189,7 @@ export default function StudioPage() {
         <CollaboratorsPanel users={users} you={you} messages={messages} onSendMessage={handleSendMessage} />
       </div>
 
-      <BottomBar currentMusicName={currentMusicName}
+      <BottomBar currentMusicName={currentMusicName} elapsedMs={elapsedMs} musicDuration={musicDuration} onResetElapsed={() => setElapsedMs(0)}
         isPlaying={isPlaying}
         onTogglePlay={togglePlay}
         onStop={stop}
