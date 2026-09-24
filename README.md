@@ -9,7 +9,7 @@
 Play now: **[beatmux.vercel.app](https://beatmux.vercel.app)**
 
 ## 📖 Introduction
-BeatMux is a real-time multiplayer drum sequencer and audio synthesis engine.
+BeatMux is a powerful real-time multiplayer drum sequencer and audio synthesis engine.
 
 ## 🌊 Application Flow
 1. **Create/Join a Room:** Users enter a nickname and create a unique room or join an existing one using a 6-character code.
