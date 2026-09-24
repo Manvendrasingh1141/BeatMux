@@ -1,0 +1,47 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Use Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '24'
+        
+    - name: Install Server Dependencies
+      working-directory: ./server
+      run: npm ci
+
+    - name: Install Client Dependencies
+      working-directory: ./client
+      run: npm ci
+      
+    # Example placeholders for testing phases (currently mocked)
+    - name: Run Server Tests
+      working-directory: ./server
+      run: echo "npm test"
+      
+    - name: Run Client Tests
+      working-directory: ./client
+      run: echo "npm test"
+
+    - name: Build Frontend
+      working-directory: ./client
+      run: npm run build
+
+    - name: Build Docker Images
+      run: docker-compose build
+
+    # Deploy step would go here, depending on infrastructure (AWS/GCP/DigitalOcean)
+    # - name: Deploy
+    #   run: ./deploy.sh
