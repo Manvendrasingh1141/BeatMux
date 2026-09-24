@@ -1,0 +1,20 @@
+@@ -157,7 +161,8 @@
+     if (this._pattern && this._pattern[key] && this._pattern[key][step]) {
+       const fn = SYNTHS[key];
+       if (fn && this._trackGains[key]) {
+-        fn(this._ctx, time, this._trackGains[key]);
++        // Apply quantize? Maybe we don't need quantize for the actual scheduling yet, just resolution
++        fn(this._ctx, time, this._trackGains[key]);
+       }
+     }
+   }
+@@ -168,7 +173,8 @@
+     }
+ 
+     // 16 steps = 4 beats. So each step is 1/4 of a beat.
+-    const secondsPerStep = 60.0 / this._bpm / 4;
++    const stepsPerBeat = this._resolution === '1/8 Beat' ? 8 : 4;
++    const secondsPerStep = 60.0 / this._bpm / stepsPerBeat;
+     this._nextStepTime += secondsPerStep;
+     this._currentStep   = (this._currentStep + 1) % TOTAL_STEPS;
+   }

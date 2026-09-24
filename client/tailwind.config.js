@@ -7,11 +7,11 @@ export default {
   theme: {
     extend: {
       colors: {
-        background: '#070A12',
-        panel: '#0F1422',
-        primary: '#8b5cf6', // violet
-        secondary: '#0ea5e9', // electric blue
-      },
+        indigo: {
+          500: '#6366f1',
+          600: '#4f46e5',
+        }
+      }
     },
   },
   plugins: [],

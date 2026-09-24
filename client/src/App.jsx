@@ -1,10 +1,15 @@
-import React from 'react';
-import { RouterProvider } from 'react-router-dom';
-import { router } from './app/router';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import LandingPage from './pages/LandingPage';
+import StudioPage from './pages/StudioPage';
 
 function App() {
   return (
-    <RouterProvider router={router} />
+    <Router>
+      <Routes>
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/room/:roomId" element={<StudioPage />} />
+      </Routes>
+    </Router>
   );
 }
 
