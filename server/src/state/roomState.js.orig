@@ -36,6 +36,5 @@ export function createRoomState() {
       closedHat: 80,
       openHat:   80,
     },
-    messages:    [],
   };
 }

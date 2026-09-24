@@ -23,10 +23,10 @@ const TRACK_WAVES = Array.from({ length: 20 }).map((_, ti) => ({
   seg2: makeWaveform(30, ti * 2.1 + 1),
 }));
 
-const TOTAL_BARS = 16;
+const TOTAL_BARS = 12;
 
 export default function Arranger({ currentStep = -1, isPlaying = false, tracks = [], quantize = '1/16', pattern = null }) {
-  const [zoom, setZoom]    = useState(3);
+  const [zoom, setZoom]    = useState(1);
   const timelineRef        = useRef(null);
   const leftRef            = useRef(null);
 
@@ -60,7 +60,7 @@ export default function Arranger({ currentStep = -1, isPlaying = false, tracks =
   };
 
   return (
-    <div className="bg-white/90 rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden flex flex-col shrink-0">
+    <div className="bg-white/90 rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden flex flex-col flex-1 min-h-0">
 
       {/* ── Header ────────────────────────────────────────────────── */}
       <div className="flex items-center justify-between px-4 py-2.5 border-b border-slate-100 shrink-0">

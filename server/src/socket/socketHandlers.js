@@ -106,6 +106,29 @@ export function registerSocketHandlers(io, socket) {
     }
   });
 
+  // ── chat:send ──────────────────────────────────────────────────────────────
+  socket.on('chat:send', ({ text }) => {
+    log('chat:send');
+    const room = getRoomBySocket(socket.id);
+    if (!room || !text || typeof text !== 'string') return;
+    
+    const user = room.users.get(socket.id);
+    if (!user) return;
+
+    const message = {
+      id: Date.now().toString() + Math.random().toString(36).substr(2, 5),
+      userId: user.id,
+      displayName: user.displayName,
+      text,
+      timestamp: Date.now(),
+    };
+
+    if (!room.state.messages) room.state.messages = [];
+    room.state.messages.push(message);
+    
+    io.to(room.roomId).emit('chat:message', message);
+  });
+
   // ── room:leave ─────────────────────────────────────────────────────────────
   socket.on('room:leave', () => {
     log('room:leave');

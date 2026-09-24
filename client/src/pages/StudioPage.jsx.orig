@@ -108,7 +108,7 @@ export default function StudioPage() {
       />
 
       <div className="flex-1 flex overflow-hidden h-full">
-        <main className="flex-1 h-full flex flex-col justify-center px-8 py-6 gap-6 overflow-hidden min-w-0 bg-transparent relative">
+        <main className="flex-1 h-full flex flex-col px-8 py-6 gap-6 overflow-hidden min-w-0 bg-transparent relative">
             <Arranger currentStep={currentStep} isPlaying={isPlaying} tracks={tracks} quantize={quantize} pattern={pattern} />
 
             <Sequencer

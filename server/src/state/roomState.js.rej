@@ -1,0 +1,8 @@
+@@ -30,6 +30,7 @@
+       closedHat: 80,
+       openHat:   80,
+     },
++    messages:    [],
+   };
+ }
+ 

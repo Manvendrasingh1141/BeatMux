@@ -168,18 +168,19 @@ export function useSequencer(initialState = null) {
       setTracks((prev) => prev.map((t) => t.key === trackKey ? { ...t, label } : t));
     };
 
-    const onRoomJoined = ({ state }) => {
+    const onRoomJoined = ({ state: roomPayload }) => {
+      const state = roomPayload?.state || {};
       // Overwrite all state on reconnect
       if (state.tracks) setTracks(state.tracks);
       setPattern(clonePatternFor(state.tracks || DEFAULT_TRACKS, state.pattern));
-      setBpm(state.bpm);
-      setMuted({ ...state.muted });
-      setSoloed({ ...state.soloed });
-      setVolumes({ ...state.volumes });
-      setQuantize(state.quantize || '1/16');
-      setPatternBank(state.patternBank || 'A');
-      setResolution(state.resolution || '1/4 Beat');
-      setIsPlaying(state.isPlaying);
+      if (state.bpm) setBpm(state.bpm);
+      if (state.muted) setMuted({ ...state.muted });
+      if (state.soloed) setSoloed({ ...state.soloed });
+      if (state.volumes) setVolumes({ ...state.volumes });
+      if (state.quantize) setQuantize(state.quantize);
+      if (state.patternBank) setPatternBank(state.patternBank);
+      if (state.resolution) setResolution(state.resolution);
+      if (state.isPlaying !== undefined) setIsPlaying(state.isPlaying);
       
       if (state.isPlaying) {
         engineRef.current.init();
