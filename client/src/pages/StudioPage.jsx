@@ -18,6 +18,8 @@ export default function StudioPage() {
   const [users,      setUsers]      = useState(initialData?.roomState?.users || []);
   const [connStatus, setConnStatus] = useState('connected');
   const [messages,   setMessages]   = useState(initialData?.roomState?.messages || []);
+  const [currentMusicName, setCurrentMusicName] = useState("");
+  const [isRecording, setIsRecording] = useState(false);
 
   useEffect(() => {
     window.onAddMusic = async (file) => {
