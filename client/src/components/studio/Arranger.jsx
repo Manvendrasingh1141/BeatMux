@@ -65,7 +65,7 @@ export default function Arranger({ currentStep = -1, isPlaying = false, tracks =
     <div className="bg-white/90 rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden flex flex-col shrink-0">
 
       {/* ── Header ────────────────────────────────────────────────── */}
-      <div className="flex items-center justify-between px-4 py-2.5 border-b border-slate-100 shrink-0">
+      <div className="flex flex-wrap items-center justify-between px-4 py-2.5 gap-2 border-b border-slate-100 shrink-0">
         <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-400">Arrangement</span>
         <div className="flex items-center gap-1.5">
           <span className="text-[11px] text-slate-400 font-medium">Zoom</span>

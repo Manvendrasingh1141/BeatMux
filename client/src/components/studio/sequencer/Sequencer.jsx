@@ -95,7 +95,8 @@ export default function Sequencer({
       </div>
 
       {/* ── Step grid ─────────────────────────────────────────────────── */}
-      <div className="px-4 py-3 space-y-1.5 overflow-y-auto" style={{ maxHeight: '260px' }}>
+      <div className="px-2 sm:px-4 py-3 space-y-1.5 overflow-y-auto overflow-x-auto w-full" style={{ maxHeight: '350px' }}>
+      <div className="min-w-[650px]">
         {/* Step numbers */}
         <div className="flex ml-[204px] gap-1 mb-0.5">
           {Array.from({ length: TOTAL_STEPS }, (_, i) => (
@@ -123,12 +124,13 @@ export default function Sequencer({
             onRenameTrack={onRenameTrack}
           />
         ))}
+        </div>
       </div>
 
       {/* ── Add Track Modal ───────────────────────────────────────────── */}
       {showAddModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/25 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 p-6 w-80">
+          <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 p-6 w-full max-w-sm mx-4">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-sm font-bold text-slate-900">Add New Track</h3>
               <button onClick={() => setShowAddModal(false)} className="text-slate-400 hover:text-slate-600">

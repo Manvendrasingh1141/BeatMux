@@ -23,8 +23,8 @@ export default function BottomBar({ isPlaying, onTogglePlay, onStop, onChangeMas
   const totalString = musicDuration > 0 ? formatTime(musicDuration * 1000) : "00:32.00";
 
   return (
-    <footer className="h-[64px] bg-white border-t border-slate-200/80 flex items-center justify-between px-5 shrink-0 z-20 shadow-[0_-2px_10px_rgba(0,0,0,0.04)]">
-      <div className="w-52 shrink-0 flex flex-col justify-center">
+    <footer className="h-auto min-h-[64px] py-3 lg:py-0 bg-white border-t border-slate-200/80 flex flex-wrap lg:flex-nowrap items-center justify-center lg:justify-between px-2 lg:px-5 shrink-0 z-20 shadow-[0_-2px_10px_rgba(0,0,0,0.04)] gap-3 lg:gap-0">
+      <div className="w-full lg:w-52 shrink-0 flex flex-col justify-center items-center lg:items-start text-center lg:text-left order-3 lg:order-1 hidden sm:flex">
         {currentMusicName && (
           <>
             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Current song</span>
@@ -33,7 +33,7 @@ export default function BottomBar({ isPlaying, onTogglePlay, onStop, onChangeMas
         )}
       </div>
 
-      <div className="flex items-center gap-6">
+      <div className="flex items-center gap-2 sm:gap-6 order-1 lg:order-2">
         <span className="text-[13px] font-bold tabular-nums text-slate-500 w-[60px] text-right">
           {timeString}
         </span>
@@ -60,7 +60,7 @@ export default function BottomBar({ isPlaying, onTogglePlay, onStop, onChangeMas
         </span>
       </div>
 
-      <div className="flex items-center gap-3 w-52 shrink-0 justify-end">
+      <div className="flex items-center gap-2 lg:gap-3 w-full lg:w-52 shrink-0 justify-center lg:justify-end order-2 lg:order-3">
         <button
           onClick={() => { const m = !muted; setMuted(m); onChangeMasterVolume?.(m ? 0 : volume / 100); }}
           className="text-slate-400 hover:text-slate-600 transition-colors"

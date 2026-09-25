@@ -108,7 +108,7 @@ export class AudioEngine {
 
   setBpm(bpm) { this._bpm = Math.max(40, Math.min(240, bpm)); }
   setResolution(res) { this._resolution = res; }
-  setPattern(pattern) { this._pattern = Object.fromEntries(Object.entries(pattern).map(([k, v]) => [k, [...v]])); }
+  setPattern(pattern) { this._pattern = Object.fromEntries(Object.entries(pattern).map(([k, v]) => Array.isArray(v) ? [k, [...v]] : [k, []])); }
   setMuted(muted) { this._muted = { ...muted }; }
   setSoloed(soloed) { this._soloed = { ...soloed }; }
   

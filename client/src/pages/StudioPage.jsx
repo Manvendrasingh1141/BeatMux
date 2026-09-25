@@ -161,8 +161,8 @@ export default function StudioPage() {
         canRedo={canRedo}
       />
 
-      <div className="flex-1 flex overflow-hidden h-full">
-        <main className="flex-1 h-full flex flex-col justify-center px-8 py-6 gap-6 overflow-hidden min-w-0 bg-transparent relative">
+      <div className="flex-1 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden h-full">
+        <main className="flex-1 min-h-min lg:h-full flex flex-col justify-start lg:justify-center px-2 sm:px-4 lg:px-8 py-4 lg:py-6 gap-4 lg:gap-6 overflow-visible lg:overflow-hidden min-w-0 bg-transparent relative shrink-0">
             <Arranger currentStep={currentStep} isPlaying={isPlaying} tracks={tracks} quantize={quantize} pattern={pattern} elapsedMs={elapsedMs} musicDuration={musicDuration} bpm={bpm} />
 
             <Sequencer

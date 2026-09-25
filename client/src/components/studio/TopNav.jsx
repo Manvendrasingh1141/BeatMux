@@ -14,10 +14,10 @@ export default function TopNav({ roomId, isPlaying, bpm, onTogglePlay, onStop, o
   const dotColor = connStatus === 'connected' ? '#22c55e' : connStatus === 'reconnecting' ? '#eab308' : '#ef4444';
 
   return (
-    <header className="h-14 bg-white border-b border-slate-200/80 flex items-center justify-between px-5 shrink-0 z-30 shadow-sm">
+    <header className="h-auto min-h-[56px] py-2 lg:py-0 bg-white border-b border-slate-200/80 flex flex-wrap items-center justify-between px-3 lg:px-5 shrink-0 z-30 shadow-sm gap-y-3">
 
       {/* ── Left: Logo + pills ──────────────────────────────────────── */}
-      <div className="flex items-center gap-4">
+      <div className="flex flex-wrap items-center gap-2 sm:gap-4">
         {/* Logo */}
         <div className="flex items-center gap-2 select-none mr-1">
           <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(135deg,#7c6fcd,#5e60ce)' }}>
@@ -27,7 +27,7 @@ export default function TopNav({ roomId, isPlaying, bpm, onTogglePlay, onStop, o
         </div>
 
         {/* Status pills */}
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 hidden sm:flex">
           {/* Online */}
           <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold text-slate-600 bg-slate-50 border border-slate-200">
             <span className="w-1.5 h-1.5 rounded-full" style={{ background: dotColor }} />
@@ -43,7 +43,7 @@ export default function TopNav({ roomId, isPlaying, bpm, onTogglePlay, onStop, o
       </div>
 
       {/* ── Centre: BPM + Transport ─────────────────────────────────── */}
-      <div className="flex items-center gap-5">
+      <div className="flex flex-wrap items-center gap-3 sm:gap-5 order-3 w-full lg:w-auto lg:order-none justify-center">
         {/* BPM */}
         <div className="flex items-center gap-2">
           <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">BPM</span>
@@ -82,9 +82,9 @@ export default function TopNav({ roomId, isPlaying, bpm, onTogglePlay, onStop, o
       </div>
 
       {/* ── Right: Avatar ───────────────────────────────────────────── */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2 sm:gap-4 order-2 lg:order-none">
         {/* Pills */}
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-1 sm:gap-2 justify-end">
           {/* Download */}
           <button
             onClick={onDownload}
@@ -96,7 +96,7 @@ export default function TopNav({ roomId, isPlaying, bpm, onTogglePlay, onStop, o
           </button>
 
           {/* Collaborators */}
-          <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold text-indigo-600 bg-indigo-50 border border-indigo-100">
+          <span className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold text-indigo-600 bg-indigo-50 border border-indigo-100">
             <span className="flex -space-x-1">
               <span className="w-3.5 h-3.5 rounded-full bg-indigo-300 border border-white block" />
               <span className="w-3.5 h-3.5 rounded-full bg-violet-300 border border-white block" />
