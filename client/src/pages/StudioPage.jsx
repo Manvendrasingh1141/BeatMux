@@ -161,9 +161,10 @@ export default function StudioPage() {
         canRedo={canRedo}
       />
 
-      <div className="flex-1 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden h-full">
-        <main className="flex-1 min-h-min lg:h-full flex flex-col justify-start lg:justify-center px-2 sm:px-4 lg:px-8 py-4 lg:py-6 gap-4 lg:gap-6 overflow-visible lg:overflow-hidden min-w-0 bg-transparent relative shrink-0">
-            <Arranger currentStep={currentStep} isPlaying={isPlaying} tracks={tracks} quantize={quantize} pattern={pattern} elapsedMs={elapsedMs} musicDuration={musicDuration} bpm={bpm} />
+      <div className="flex-1 flex flex-col lg:flex-row overflow-y-auto overflow-y-auto h-full">
+        <main className="flex-1 min-h-min lg:h-full flex flex-col justify-start px-2 sm:px-4 lg:px-8 py-4 lg:py-6 gap-4 lg:gap-6 overflow-y-auto min-w-0 bg-transparent relative shrink-0">
+            <div className="flex flex-col gap-4 lg:gap-6 my-auto">
+              <Arranger currentStep={currentStep} isPlaying={isPlaying} tracks={tracks} quantize={quantize} pattern={pattern} elapsedMs={elapsedMs} musicDuration={musicDuration} bpm={bpm} />
 
             <Sequencer
               pattern={pattern}
@@ -187,6 +188,7 @@ export default function StudioPage() {
               onClear={clearPattern}
               onReset={resetPattern}
             />
+            </div>
         </main>
 
         <CollaboratorsPanel users={users} you={you} messages={messages} onSendMessage={handleSendMessage} />
